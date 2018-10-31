@@ -6,9 +6,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import lee.com.mqtt_android.mqtt.Container;
-import lee.com.mqtt_android.mqtt.MQTTService;
-import lee.com.mqtt_android.mqtt.MqttFragment;
+import lee.com.mqtt_android.main.MQTTService;
+import lee.com.mqtt_android.main.MqttFragment;
+import lee.com.mqtt_android.model.Container;
 
 
 public class MainActivity extends AppCompatActivity implements MqttFragment.OnFragmentInteractionListener {
@@ -34,8 +34,6 @@ public class MainActivity extends AppCompatActivity implements MqttFragment.OnFr
             mqttFragment = MqttFragment.newInstance("", "");
             fragmentManager.beginTransaction().add(R.id.fragment_container, mqttFragment, FRAGMENT_TAG_MQTT).commit();
         }
-
-        //初始化presenter
     }
 
     @Override

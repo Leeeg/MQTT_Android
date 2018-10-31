@@ -1,4 +1,4 @@
-package lee.com.mqtt_android.mqtt;
+package lee.com.mqtt_android.main;
 
 import android.app.Service;
 import android.content.Context;
@@ -30,10 +30,16 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.UUID;
 
+import lee.com.mqtt_android.model.Container;
+import lee.com.mqtt_android.model.MyMqttMessage;
+import lee.com.mqtt_android.model.StartMessage;
+
 /**
  * CreateDate：18-9-15 on 上午10:33
  * Describe:
  * Coder: lee
+ * <p>
+ * <p>
  * <p>
  * MQTT注册主题：
  * <p>
@@ -69,10 +75,12 @@ public class MQTTService extends Service {
 
     private static MqttAndroidClient client;
     private MqttConnectOptions conOpt;
-
     private String host = "tcp://192.168.0.25:61613";
     private String userName = "admin";
     private String passWord = "password";
+    //    private String host = "tcp://47.106.253.152:1883";
+//    private String userName = "mosquitto";
+//    private String passWord = "mosquitto";
     private String clientId;
     private boolean isConnected;
     private String subOutTopicRoot = "out-topic-proxy/ready-call/";
@@ -129,9 +137,10 @@ public class MQTTService extends Service {
             subTopics();
         } else if (intent.getBooleanExtra(Container.MQTT_STARTCALL, false)) {
             toId = intent.getStringExtra(Container.MQTT_TOID);
+            int type = intent.getIntExtra(Container.MQTT_TYPE, 0);
             Log.i(TAG, "start call : " + toId);
-            sendOut();
-        }else if (intent.getBooleanExtra(Container.MQTT_STOPCALL, false)) {
+            startCall(type);
+        } else if (intent.getBooleanExtra(Container.MQTT_STOPCALL, false)) {
             Log.i(TAG, "stop call");
             sendOutEnd();
         }
@@ -224,11 +233,14 @@ public class MQTTService extends Service {
     /**
      * 发起呼叫
      */
-    private void sendOut() {
-        String content = "{\"type\": \"user\", \"typeNo\": " + toId + "}";
+    private void startCall(int type) {
+        StartMessage startMessage = new StartMessage();
+        startMessage.setType(type);
+        startMessage.setUserId(userId);
+        startMessage.setTargetId(toId);
         MqttMessage mqttMessage = new MqttMessage();
         mqttMessage.setQos(1);
-        mqttMessage.setPayload(content.getBytes());
+        mqttMessage.setPayload(GsonInner.getInstance().toJson(startMessage).getBytes());
         mqttMessage.setRetained(false);
         try {
             sendBack(publishInTopicRoot + userId);
@@ -269,7 +281,7 @@ public class MQTTService extends Service {
      * 发送终止
      */
     private void sendOutEnd() {
-        byte[] bytes = {6,7,8,9,10};
+        byte[] bytes = {6, 7, 8, 9, 10};
 
         MyMqttMessage myMqttMessage = new MyMqttMessage();
         myMqttMessage.setType("user");
@@ -385,6 +397,12 @@ public class MQTTService extends Service {
         }
     };
 
+    private void setStartCallResponse(byte[] bytes) {
+
+        sendBack(new String(bytes));
+        StartMessage startMessage = GsonInner.getInstance().fromJson(new String(bytes), StartMessage.class);
+
+    }
 
     /**
      * MQTT监听并且接受消息
@@ -401,23 +419,13 @@ public class MQTTService extends Service {
 
             if (topic.equals(topicOut)) {//发布起呼的返回
                 Log.e(TAG, "do startRecord ");
+                setStartCallResponse(message.getPayload());
                 sendOutHead();
             } else if (topic.equals(topicIn)) {//收到呼叫
                 receiveCall();
-            }else if (topic.equals(topicEndCallOut)){//收到结束会话
+            } else if (topic.equals(topicEndCallOut)) {//收到结束会话
                 receiveEnd();
             }
-
-
-//            Log.e(TAG, "Time : " + System.currentTimeMillis() + "   VoiceNumber = " + VoiceUtil
-//                    .getSequenceNumberFromVoice(message.getPayload())
-//             + "   VoiceId = " + VoiceUtil.getVoiceId(message.getPayload()));
-
-//            send(message.getPayload());
-
-//            sendBroadcast(new Intent(MQTT_TALKBACK)
-//                    .putExtra(MQTT_KEY, message.getPayload())
-//                    .putExtra(MQTT_TIME, String.valueOf(System.currentTimeMillis())));
 
         }
 

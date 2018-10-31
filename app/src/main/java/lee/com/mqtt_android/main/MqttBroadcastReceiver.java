@@ -1,4 +1,4 @@
-package lee.com.mqtt_android.mqtt;
+package lee.com.mqtt_android.main;
 
 
 import android.content.BroadcastReceiver;

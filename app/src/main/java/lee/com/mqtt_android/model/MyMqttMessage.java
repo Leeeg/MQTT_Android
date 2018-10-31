@@ -1,4 +1,4 @@
-package lee.com.mqtt_android.mqtt;
+package lee.com.mqtt_android.model;
 
 /**
  * CreateDate：18-10-30 on 下午5:36
