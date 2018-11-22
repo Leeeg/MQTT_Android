@@ -1,17 +1,14 @@
-package lee.com.mqtt_android.main;
+package lee.com.mqtt_android;
 
 import android.app.Fragment;
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,8 +18,9 @@ import android.widget.EditText;
 import java.util.ArrayList;
 import java.util.List;
 
-import lee.com.mqtt_android.MyApplication;
-import lee.com.mqtt_android.R;
+import lee.com.mqtt_android.model.StartMessage;
+import lee.com.mqtt_android.mqtt.MQTTManager;
+import lee.com.mqtt_android.mqtt.MyMQTTCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,7 +30,7 @@ import lee.com.mqtt_android.R;
  * Use the {@link MqttFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MqttFragment extends Fragment implements MyMqttCallback {
+public class MqttFragment extends Fragment implements MyMQTTCallback {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
@@ -48,6 +46,11 @@ public class MqttFragment extends Fragment implements MyMqttCallback {
     private RecyclerView recyclerView;
     private LogAdapter logAdapter;
     private List<String> logList = new ArrayList<>();
+
+    private MQTTManager mqttManager;
+    private String host = "tcp://192.168.0.25:61613";
+    private String userName = "admin";
+    private String passWord = "password";
 
     public MqttFragment() {
         // Required empty public constructor
@@ -100,9 +103,10 @@ public class MqttFragment extends Fragment implements MyMqttCallback {
 
         mqttStartCall = rootView.findViewById(R.id.bt_mqtt_start_call);
         mqttStartCall.setOnClickListener((v) -> {
-            if (null != mqttSendToEt.getText() && !mqttSendToEt.getText().toString().isEmpty())
+            if (null != mqttSendToEt.getText() && !mqttSendToEt.getText().toString().isEmpty()) {
                 mqttData(" --->  " + mqttSendToEt.getText().toString());
-                startCall(mqttSendToEt.getText().toString());
+                startCall(0, Integer.valueOf(mqttSendToEt.getText().toString()));
+            }
         });
         mqttStopCall = rootView.findViewById(R.id.bt_mqtt_stop_call);
         mqttStopCall.setOnClickListener((v) -> {
@@ -115,18 +119,12 @@ public class MqttFragment extends Fragment implements MyMqttCallback {
         layoutManager.setOrientation(OrientationHelper.VERTICAL);
         logAdapter = new LogAdapter(logList);
         recyclerView.setAdapter(logAdapter);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setItemAnimator(null);
 
-        connection = new MyServiceConnection();
+        mqttManager = MQTTManager.getInstance()
+                .init(MyApplication.getInstance().getApplicationContext());
 
         return rootView;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
     }
 
     @Override
@@ -152,77 +150,58 @@ public class MqttFragment extends Fragment implements MyMqttCallback {
         recyclerView.scrollToPosition(logAdapter.getItemCount() - 1);
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    @Override
+    public void onMQTTError(int code, String err) {
+        Log.d("Lee_mqtt", "onMQTTError : code = " + code + "  err" + err);
+    }
+
+    @Override
+    public void onStartCallResponse(StartMessage startMessage) {
+        Log.d("Lee_mqtt", "onStartCallResponse : startMessage = " + startMessage);
+    }
+
+
+    @Override
+    public void onReceiveCall() {
+        Log.d("Lee_mqtt", "onReceiveCall");
+    }
+
+    @Override
+    public void onEndCall() {
+        Log.d("Lee_mqtt", "onEndCall");
+    }
+
+    @Override
+    public void onMQTTResule(int type, boolean connect) {
+        Log.d("Lee_mqtt", "onMQTTResule : type = " + type + "  connect" + connect);
+    }
+
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
-
-        void startCall(String toId);
-
-        void stopCall();
-
-        void onMqttSub(String topic);
     }
 
     private void startMqttService() {
-//        if (null != mListener) mListener.startCall(0);
         mqttData("onBindService --- ");
-        onBindService();
+        mqttManager.bindMQTTService(this);
     }
 
     private void stopMqttService() {
-//        if (null != mListener) mListener.startCall(-1);
         mqttData("onUnbindService --- ");
-        onUnBindService();
+        mqttManager.unBindMQTTService();
     }
 
     private void subMqttTopic(String topic) {
-        if (null != mListener) mListener.onMqttSub(topic);
+        mqttManager.subscribeTopic(Integer.valueOf(topic));
     }
 
-    private void startCall(String toId) {
-        if (null != mListener) mListener.startCall(toId);
+    private void startCall(int type, int toId) {
+        mqttManager.startCall(type, toId);
     }
 
     private void stopCall() {
-        if (null != mListener) mListener.stopCall();
+        mqttManager.stopCall();
     }
 
-    public void onBindService() {
-        Intent i = new Intent(getActivity(), MQTTService.class);
-        getActivity().bindService(i, connection, getActivity().BIND_AUTO_CREATE);
-    }
-
-    public void onUnBindService() {
-        getActivity().unbindService(connection);
-    }
-
-    MyServiceConnection connection;
-    MQTTService mqttService;
-
-    public class MyServiceConnection implements ServiceConnection {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mqttService = ((MQTTService.MqttBinder) service).getService();
-            mqttService.setMqttCallback(MqttFragment.this);
-            mqttData("onServiceUnConnected --- ");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mqttService.setMqttCallback(null);
-            mqttData("onServiceUnConnected --- ");
-        }
-    }
 
 }

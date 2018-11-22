@@ -7,23 +7,23 @@ package lee.com.mqtt_android.model;
  */
 public class MyMqttMessage {
 
-    private String type;
-    private String typeNo;
+    private int type;
+    private int typeNo;
     private byte[] notes;
 
-    public String getType() {
+    public int getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(int type) {
         this.type = type;
     }
 
-    public String getTypeNo() {
+    public int getTypeNo() {
         return typeNo;
     }
 
-    public void setTypeNo(String typeNo) {
+    public void setTypeNo(int typeNo) {
         this.typeNo = typeNo;
     }
 

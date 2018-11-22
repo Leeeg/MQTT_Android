@@ -6,8 +6,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import lee.com.mqtt_android.main.MQTTService;
-import lee.com.mqtt_android.main.MqttFragment;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+
+import lee.com.mqtt_android.mqtt.MQTTManager;
+import lee.com.mqtt_android.mqtt.MQTTService;
 import lee.com.mqtt_android.model.Container;
 
 
@@ -34,6 +38,36 @@ public class MainActivity extends AppCompatActivity implements MqttFragment.OnFr
             mqttFragment = MqttFragment.newInstance("", "");
             fragmentManager.beginTransaction().add(R.id.fragment_container, mqttFragment, FRAGMENT_TAG_MQTT).commit();
         }
+
+
+        Class c = null;
+        try {
+            c = Class.forName("lee.com.mqtt_android.mqtt.MQTTManager");
+            Constructor con = c.getConstructor();
+            Object obj = con.newInstance();
+
+            Field element = c.getDeclaredField("userName");
+            element.setAccessible(true);
+            System.out.println("---------");
+            System.out.println(element.get(obj));
+            element.set(obj, "Test");
+            System.out.println(element.get(obj));
+            System.out.println("---------");
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -41,27 +75,6 @@ public class MainActivity extends AppCompatActivity implements MqttFragment.OnFr
 
     }
 
-    @Override
-    public void startCall(String toId) {
-        Intent mqttIntent = new Intent(MainActivity.this, MQTTService.class);
-        mqttIntent.putExtra(Container.MQTT_STARTCALL, true);
-        mqttIntent.putExtra(Container.MQTT_TOID, toId);
-        startService(mqttIntent);
-    }
 
-    @Override
-    public void stopCall() {
-        Intent mqttIntent = new Intent(MainActivity.this, MQTTService.class);
-        mqttIntent.putExtra(Container.MQTT_STOPCALL, true);
-        startService(mqttIntent);
-    }
-
-    @Override
-    public void onMqttSub(String topic) {
-        Intent mqttIntent = new Intent(MainActivity.this, MQTTService.class);
-        mqttIntent.putExtra(Container.MQTT_KEY, topic);
-        mqttIntent.putExtra(Container.MQTT_ISTOPIC, true);
-        startService(mqttIntent);
-    }
 
 }

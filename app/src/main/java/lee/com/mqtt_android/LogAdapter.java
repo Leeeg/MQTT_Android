@@ -1,4 +1,4 @@
-package lee.com.mqtt_android.main;
+package lee.com.mqtt_android;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -7,8 +7,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.List;
-
-import lee.com.mqtt_android.R;
 
 
 /**

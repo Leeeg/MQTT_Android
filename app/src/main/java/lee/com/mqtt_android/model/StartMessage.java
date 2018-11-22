@@ -1,14 +1,18 @@
 package lee.com.mqtt_android.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * CreateDate：18-10-31 on 上午10:36
  * Describe:
  * Coder: lee
  */
-public class StartMessage {
+public class StartMessage implements Parcelable {
     private int type;
-    private String userId;
-    private String targetId;
+    private int userId;
+    private int targetId;
+    private int callId;
 
     private int number;
     private int online;
@@ -22,19 +26,19 @@ public class StartMessage {
         this.type = type;
     }
 
-    public String getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 
-    public String getTargetId() {
+    public int getTargetId() {
         return targetId;
     }
 
-    public void setTargetId(String targetId) {
+    public void setTargetId(int targetId) {
         this.targetId = targetId;
     }
 
@@ -61,4 +65,53 @@ public class StartMessage {
     public void setIsCall(int isCall) {
         this.isCall = isCall;
     }
+
+    public int getCallId() {
+        return callId;
+    }
+
+    public void setCallId(int callId) {
+        this.callId = callId;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(this.type);
+        dest.writeInt(this.userId);
+        dest.writeInt(this.targetId);
+        dest.writeInt(this.callId);
+        dest.writeInt(this.number);
+        dest.writeInt(this.online);
+        dest.writeInt(this.isCall);
+    }
+
+    public StartMessage() {
+    }
+
+    protected StartMessage(Parcel in) {
+        this.type = in.readInt();
+        this.userId = in.readInt();
+        this.targetId = in.readInt();
+        this.callId = in.readInt();
+        this.number = in.readInt();
+        this.online = in.readInt();
+        this.isCall = in.readInt();
+    }
+
+    public static final Parcelable.Creator<StartMessage> CREATOR = new Parcelable.Creator<StartMessage>() {
+        @Override
+        public StartMessage createFromParcel(Parcel source) {
+            return new StartMessage(source);
+        }
+
+        @Override
+        public StartMessage[] newArray(int size) {
+            return new StartMessage[size];
+        }
+    };
 }

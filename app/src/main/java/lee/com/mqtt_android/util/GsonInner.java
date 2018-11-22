@@ -1,4 +1,4 @@
-package lee.com.mqtt_android.main;
+package lee.com.mqtt_android.util;
 
 import com.google.gson.Gson;
 

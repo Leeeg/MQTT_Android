@@ -29,11 +29,14 @@
             </intent-filter>
         </activity>
 
-
         <!-- Mqtt Service -->
         <service android:name="org.eclipse.paho.android.service.MqttService" />
-        <service android:name=".main.MQTTService" />
+        <service android:name=".mqtt.MQTTService" />
 
+        <activity
+            android:name=".Main2Activity"
+            android:label="@string/title_activity_main2"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
